@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>César Matrix: Omega</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <div class="main-console">
+
+        <!-- MODOS -->
+        <nav class="mode-selector">
+            <button id="btn-libre" class="active">MODO LIBRE</button>
+            <button id="btn-mision">MISIONES</button>
+            <button id="btn-historia">HISTORIA</button>
+            <button id="btn-crono">CONTRARRELOJ</button>
+        </nav>
+
+        <div class="game-layout">
+
+            <!-- SIDEBAR MISIONES -->
+            <aside id="level-sidebar" class="sidebar hidden">
+                <h3>TERMINALES</h3>
+                <div id="level-list"></div>
+            </aside>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <div class="content">
+
+                <div id="info-bar" class="info-bar hidden">
+                    <p id="info-text">Selecciona terminal...</p>
+                </div>
+
+                <div class="interactive-area">
+
+                    <!-- LETRA GIGANTE -->
+                    <div class="gate">
+                        <div id="shiftedChar" class="big-char">A</div>
+                    </div>
