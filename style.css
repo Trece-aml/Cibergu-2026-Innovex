@@ -5,8 +5,6 @@
     --purple-soft: #b388ff33;
     --bg: #020202;
 }
-
-/* --- GENERAL --- */
 body {
     background: var(--bg);
     color: #fff;
@@ -18,11 +16,191 @@ body {
     align-items: center;
     justify-content: center;
 }
-
 #matrixCanvas {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 0;
     opacity: 0.18;
+}
+.main-console {
+    position: relative;
+    z-index: 10;
+    width: 90%;
+    max-width: 1400px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 2px solid var(--green);
+    padding: 40px;
+    border-radius: 14px;
+    box-shadow: 0 0 25px var(--green-soft);
+    backdrop-filter: blur(6px);
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+.mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+}
+.mode-selector button {
+    background: #001a14;
+    border: 2px solid var(--green);
+    color: var(--green);
+    cursor: pointer;
+    font-family: 'VT323';
+    padding: 14px 35px;
+    font-size: 1.6rem;
+    border-radius: 8px;
+    letter-spacing: 2px;
+    transition: 0.25s;
+}
+.mode-selector button:hover {
+    background: var(--green);
+    color: #000;
+    box-shadow: 0 0 15px var(--green);
+}
+.mode-selector button.active {
+    background: var(--green);
+    color: #000;
+    font-weight: bold;
+}
+.game-layout {
+    display: flex;
+    gap: 40px;
+    width: 100%;
+    align-items: flex-start;
+}
+.sidebar {
+    width: 260px;
+    border-right: 2px solid var(--green-soft);
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 15px;
+}
+.sidebar h3 {
+    font-family: 'VT323';
+    color: var(--green);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+.level-btn {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 10px;
+    background: #000;
+    border: 2px solid #222;
+    color: #444;
+    font-family: 'VT323';
+    text-align: left;
+    cursor: not-allowed;
+    font-size: 1.3rem;
+    border-radius: 6px;
+    transition: 0.25s;
+}
+.level-btn.unlocked {
+    border-color: var(--green);
+    color: var(--green);
+    cursor: pointer;
+}
+.level-btn.unlocked:hover {
+    background: var(--green-soft);
+    color: #000;
+}
+.level-btn.completed {
+    border-color: var(--purple);
+    color: var(--purple);
+}
+.info-bar {
+    background: var(--green-soft);
+    border: 2px solid var(--green);
+    padding: 15px;
+    font-family: 'VT323';
+    color: var(--green);
+    font-size: 1.3rem;
+    border-radius: 6px;
+}
+.interactive-area {
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    width: 100%;
+}
+.gate {
+    width: 200px;
+    height: 200px;
+    border: 2px solid var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    box-shadow: 0 0 20px var(--green-soft);
+}
+.big-char {
+    font-size: 9rem;
+    color: var(--green);
+    font-family: 'VT323';
+    text-shadow: 0 0 20px var(--green);
+}
+.controls {
+    flex: 1;
+}
+.key-box {
+    font-family: 'VT323';
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+}
+#centerKey {
+    color: var(--purple);
+    font-size: 2.4rem;
+}
+input[type="range"] {
+    width: 100%;
+    accent-color: var(--purple);
+    margin-bottom: 15px;
+}
+textarea {
+    width: 100%;
+    background: #000;
+    color: var(--green);
+    border: 2px solid var(--green-soft);
+    font-family: 'VT323';
+    padding: 15px;
+    font-size: 1.6rem;
+    height: 130px;
+    border-radius: 6px;
+}
+textarea::placeholder {
+    color: #0f8f70;
+}
+
+.result-box {
+    border: 2px dashed var(--green);
+    padding: 20px;
+    margin: 15px 0;
+    font-family: 'VT323';
+    color: var(--green);
+    font-size: 2rem;
+    border-radius: 6px;
+    background: rgba(0, 255, 200, 0.05);
+}
+.primary-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--purple);
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1.4rem;
+    border-radius: 6px;
+    transition: 0.25s;
+}
+
+.primary-btn:hover {
+    background: #d7c2ff;
+    box-shadow: 0 0 15px var(--purple);
+}
+.hidden {
+    display: none !important;
 }
