@@ -1,0 +1,221 @@
+/* =========================================
+   1. VARIABLES Y REINICIO
+   ========================================= */
+:root {
+    --neon: #00f2ff;
+    --bg-dark: #050506; /* Negro absoluto */
+    --panel-bg: #111114;
+    --pink: #ff00ea;
+    --gold: #ffcc00;
+    --green: #4ade80;
+    --red: #ff4444;
+}
+
+body {
+    background-color: var(--bg-dark) !important;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* =========================================
+   2. LOOTBOX (FONDO SÓLIDO Y EMOCIÓN)
+   ========================================= */
+.modal-overlay {
+    display: none; 
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    /* Fondo 100% opaco para no ver el menú detrás */
+    background-color: var(--bg-dark) !important; 
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+}
+
+.box-container {
+    width: 320px;
+    padding: 40px;
+    background: #0f0f12 !important;
+    border: 3px solid var(--gold);
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+    /* Animación de entrada con rebote */
+    animation: boxPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes boxPopIn {
+    0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* La sacudida continua de la caja (mientras esperas) */
+#box-emoji {
+    font-size: 80px;
+    display: inline-block;
+    animation: boxShake 1.5s infinite;
+}
+
+@keyframes boxShake {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    10%, 30% { transform: rotate(5deg) scale(1.1); }
+    20%, 40% { transform: rotate(-5deg) scale(1.1); }
+    50% { transform: rotate(0deg) scale(1.2); }
+}
+
+/* =========================================
+   1. EL POP-UP DE COMBO (EL "PUM")
+   ========================================= */
+#combo-badge {
+    /* Posición absoluta en el centro de la pantalla */
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(0);
+    
+    /* Estilo Visual Impactante */
+    display: block !important; /* Forzamos que siempre "exista" para el CSS */
+    z-index: 10000 !important;
+    font-size: 6rem !important;
+    font-weight: 900 !important;
+    color: #fff !important;
+    font-style: italic;
+    text-transform: uppercase;
+    -webkit-text-stroke: 3px var(--pink);
+    text-shadow: 0 0 30px var(--pink), 0 0 60px rgba(255,255,255,0.4);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Esta es la clave: cuando el JS cambia el texto o el estilo, 
+   aplicamos esta clase de animación desde el JS */
+.pum-animacion {
+    animation: pumPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+
+@keyframes pumPop {
+    0% { 
+        transform: translate(-50%, -50%) scale(0) rotate(-20deg); 
+        opacity: 0; 
+    }
+    20% { 
+        transform: translate(-50%, -50%) scale(1.2) rotate(10deg); 
+        opacity: 1; 
+    }
+    80% { 
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 1; 
+        filter: blur(0px); /* Aquí quitamos lo borroso mientras se lee */
+    }
+    100% { 
+        transform: translate(-50%, -50%) scale(1.5); 
+        opacity: 0; 
+        filter: blur(4px); /* Solo un poco de desenfoque al desvanecerse */
+    }
+}
+
+/* =========================================
+   2. LOOTBOX (FONDO SÓLIDO SIN MENÚ DETRÁS)
+   ========================================= */
+.modal-overlay {
+    background-color: #050506 !important; /* Negro sólido */
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.box-container {
+    background: #0f0f12 !important;
+    border: 3px solid var(--gold);
+    border-radius: 25px;
+    padding: 40px;
+    text-align: center;
+    animation: boxEntry 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes boxEntry {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* =========================================
+   3. INTERFAZ LIMPIA (NO QUEMA-OJOS)
+   ========================================= */
+.cipher-text {
+    color: #ffffff !important;
+    text-shadow: none !important;
+    background: #000 !important;
+    padding: 30px !important;
+    border-radius: 12px;
+    border: 1px solid #333;
+    font-size: 32px;
+}
+
+#xp-bar {
+    background: linear-gradient(90deg, var(--neon), #fff, var(--neon)) !important;
+    background-size: 200% 100%;
+    animation: flowXP 2s linear infinite;
+}
+
+@keyframes flowXP {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+#damage-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 0, 0, 0.4); /* Rojo con transparencia */
+    border: 20px solid var(--red); /* Un marco más oscuro en los bordes */
+    box-sizing: border-box;
+    pointer-events: none; /* Importante: para que puedas seguir haciendo clic a través de él */
+    opacity: 0;
+    z-index: 10001; /* Por encima de casi todo */
+    transition: opacity 0.1s; /* Aparece rápido */
+}
+
+/* Esta clase la pondremos y quitaremos con JavaScript */
+.flash-active {
+    opacity: 1 !important;
+    animation: shake 0.2s infinite; /* Opcional: que vibre la pantalla */
+}
+
+@keyframes shake {
+    0% { transform: translate(1px, 1px); }
+    50% { transform: translate(-2px, -1px); }
+    100% { transform: translate(1px, 1px); }
+}@keyframes pum {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
+.pum-animacion { animation: pum 0.5s ease-out; position: fixed; top: 50%; left: 50%; color: var(--neon); font-size: 3rem; pointer-events: none; }
+
+#damage-flash {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 0, 0, 0.3); opacity: 0; pointer-events: none; transition: 0.2s;
+}
+.flash-active { opacity: 1 !important; }
+
+.modal {
+    display: none; /* Se oculta por defecto */
+    position: fixed; 
+    z-index: 999; /* Por encima de todo */
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0,0,0,0.9); /* Fondo oscuro */
+    text-align: center;
+    padding-top: 100px;
+}
+
+:root {
+    --gold: #ffd700; /* Definimos el color si no lo tienes */
+}
