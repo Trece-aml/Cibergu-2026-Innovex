@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CryptoHack v3.0 - Innovex Edition</title>
+    <style>
+        :root { --neon: #00ff9c; --bg: #000; --red: #ff4444; --gold: #ffcc00; --blue: #00d4ff; }
+        body { margin:0; font-family: Consolas, monospace; background: var(--bg); color: var(--neon); text-align: center; overflow: hidden; }
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+        
+        .screen { display: none; padding: 20px; height: 100vh; box-sizing: border-box; }
+        .active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        .panel { border: 1px solid var(--neon); padding: 15px; background: rgba(0,0,0,0.85); margin-bottom: 10px; box-shadow: inset 0 0 10px #004422; }
+        .grid { display: flex; gap: 15px; justify-content: center; align-items: flex-start; max-width: 1400px; }
+        
+        button { background: black; border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; cursor: pointer; text-transform: uppercase; margin: 5px; font-weight: bold; font-family: Consolas, monospace; }
+        button:hover { box-shadow: 0 0 15px var(--neon); background: var(--neon); color: black; }
+        
+        input { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 10px; text-align: center; font-size: 18px; width: 80%; margin: 10px 0; outline: none; }
+        
+        .back-btn { position: absolute; top: 20px; left: 20px; cursor: pointer; border: none; background: none; }
+        .back-btn img { width: 50px; filter: drop-shadow(0 0 5px var(--neon)); }
+
+        .conversion-table { font-size: 11px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .conversion-item { border-bottom: 1px solid #004422; padding: 1px; }
+
+        #credits-innovex { position: fixed; bottom: 10px; right: 20px; font-size: 14px; color: var(--neon); font-weight: bold; }
+        #team-credits { font-size: 11px; color: #008855; margin-top: 5px; }
+
+        .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:black; border:2px solid var(--neon); padding:25px; z-index:500; box-shadow:0 0 50px #000; max-height: 80vh; overflow-y: auto; }
+        
+        .mission-item { font-size: 0.75rem; text-align: left; margin: 4px 0; border-bottom: 1px solid #111; display: flex; justify-content: space-between; }
+        .mission-done { color: var(--blue); text-decoration: line-through; opacity: 0.6; }
+        .check { color: var(--neon); font-weight: bold; }
+        .timer-text { font-size: 0.7rem; color: var(--red); }
+    </style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div id="screen-intro" class="screen active">
+    <h1 style="font-size: 3.5rem; letter-spacing: 12px; margin: 0;">CRYPTOHACK v3.0</h1>
+    <p style="color:var(--blue)">SISTEMA DE ENTRENAMIENTO PARA AGENTES</p>
+    <div class="panel" style="width: 600px;">
+        <p id="tip-display">> Haz clic en el botón inferior para recibir inteligencia...</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <button onclick="showRandomTip()">TIP DE SEGURIDAD</button>
+        <button onclick="changeScreen('screen-menu')">INICIAR TERMINAL</button>
+    </div>
+    <div id="credits-innovex">Hecho por Innovex</div>
+</div>
+
+<div id="screen-menu" class="screen">
+    <button class="back-btn" onclick="changeScreen('screen-intro')"><img src="media/atras.png" alt="Atrás"></button>
+    
+    <div class="grid">
+        <div class="panel" style="width: 320px;">
+            <h3 style="color:var(--gold); margin:0;">[MISIONES]</h3>
+            <div id="timer-temp" class="timer-text"></div>
+            <div id="list-temp"></div>
+            <hr style="border: 0.5px solid #222">
+            <div id="timer-week" class="timer-text"></div>
+            <div id="list-week"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="panel" style="width: 350px;">
+                <h3 style="margin:0">> OPERACIONES</h3>
+                <button onclick="startGame('story')" style="width:95%">HISTORIA</button>
+                <button onclick="startGame('time')" style="width:95%; color:var(--red); border-color:var(--red);">CONTRARRELOJ</button>
+                <button onclick="startGame('infinite')" style="width:95%">INFINITO</button>
+            </div>
+            <div class="panel">
+                <h4 style="margin:0">LOG DEL SISTEMA</h4>
+                <div id="system-log" style="font-size:10px; height:60px; overflow:hidden; text-align:left; color:#008855;"></div>
+            </div>
+        </div>
+
+        <div class="panel" style="width: 300px;">
+            <h3 style="margin:0">> AGENTE</h3>
+            <p id="agent-tag" style="color:var(--blue); font-weight:bold;">ID: AGENTE_NULL</p>
+            <button onclick="openModal('name-modal')" style="width:90%; font-size:10px;">CAMBIAR NOMBRE AGENTE</button>
+            <button onclick="showRanking()" style="width:90%; font-size:10px;">LOG DE RANKING</button>
+            <button onclick="clearRanking()" style="width:90%; font-size:10px; color:var(--red); border-color:var(--red);">BORRAR PUNTUACIONES</button>
+            <hr>
+            <button onclick="changeScreen('screen-profesor')" style="width:90%">MODO PROFESOR</button>
+            <button onclick="playAd()" style="width:90%; color:var(--gold); border-color:var(--gold);">VIDEO: +1 BOMBA</button>
+        </div>
+    </div>
+
+    <div class="panel" style="width: 400px; margin-top: 10px; border-color: var(--blue);">
+        <p style="margin:0; font-size: 14px;">CRÉDITOS: $<span id="m-money">200</span> | BOMBAS: <span id="m-scripts">0</span></p>
+    </div>
+    <div id="team-credits">Angie, Enrique, Estefany y Sergio</div>
+</div>
+
+<div id="screen-profesor" class="screen">
+    <button class="back-btn" onclick="changeScreen('screen-menu')"><img src="media/atras.png" alt="Atrás"></button>
+    <div class="grid">
+        <div class="panel" style="width: 400px;">
+            <h2>LABORATORIO DE CIFRADO</h2>
+            <input type="text" id="prof-input" placeholder="TEXTO...">
+            <input type="number" id="prof-shift" value="3" style="width:60px">
+            <button onclick="profEncrypt()">GENERAR</button>
+            <p id="prof-result" style="color:var(--blue); font-size:20px;"></p>
+        </div>
+        <div class="panel" style="width: 300px;">
+            <h3>ÍNDICE DE CIFRADO</h3>
+            <div id="prof-index-table" class="conversion-table" style="grid-template-columns: 1fr;">
+                <div class="conversion-item">SHIFT 1-5: Básico Militar</div>
+                <div class="conversion-item">SHIFT 6-12: Protocolo Civil</div>
+                <div class="conversion-item">SHIFT 13: Estándar ROT13</div>
+                <div class="conversion-item">SHIFT 14+: Cifrado Deep Web</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="screen-game" class="screen">
+    <div class="grid">
+        <div class="panel" style="width: 200px;">
+            <p style="color:var(--red)">CORDURA: <span id="g-hp">100</span>%</p>
+            <p>NODO: <span id="g-level">1</span></p>
+            <p id="timer-box" style="display:none; color:var(--gold)">⏱ <span id="g-timer">60</span>s</p>
+            <p>BOMBAS: <span id="g-scripts">0</span></p>
+        </div>
+        <div class="panel" style="width: 450px;">
+            <p id="story-fact" style="font-size:0.7rem; color:var(--blue); min-height:30px;"></p>
+            <h2 id="display-word" style="letter-spacing:10px; font-size:35px;">------</h2>
+            <input type="text" id="user-input" autocomplete="off">
+            <button onclick="executeAttack()" style="width:100%">DECODIFICAR</button>
+            <button onclick="useBomb()" style="width:100%; border-color:var(--gold); color:var(--gold);">BOMBA LÓGICA</button>
+        </div>
+        <div class="panel" style="width: 250px;">
+            <h3>TABLA INTEL</h3>
+            <div id="conversion-box" class="conversion-table"></div>
+        </div>
+    </div>
+    <button onclick="confirmAbort()">ABORTAR</button>
+</div>
+
+<div id="name-modal" class="modal">
+    <h3>REGISTRAR NUEVO AGENTE</h3>
+    <input type="text" id="new-agent-name" placeholder="NOMBRE...">
+    <button onclick="setAgentName()">CONFIRMAR</button>
+</div>
+
+<div id="save-modal" class="modal">
+    <h3>NODO FINALIZADO</h3>
+    <p>Puntuación: <span id="final-score">0</span></p>
+    <div style="display:flex; gap:10px;">
+        <button onclick="saveScore(true)">GUARDAR EN RANKING</button>
+        <button onclick="saveScore(false)" style="color:var(--red)">DESCARTAR</button>
+    </div>
+</div>
+
+<div id="ranking-modal" class="modal">
+    <h2>HISTORIAL DE MISIONES</h2>
+    <div id="ranking-list" style="margin-bottom:15px;"></div>
+    <button onclick="closeModal('ranking-modal')">CERRAR</button>
+</div>
+
+<div id="ad-box" class="modal">
+    <h3 style="color:var(--gold)">ESPERA A QUE ACABE EL ANUNCIO...</h3>
+    <video id="video-player" width="400" src="media/YTDown.com_YouTube_Rick-roll-but-with-different-link_Media_iik25wqIuFo_002_720p.mp4"></video>
+</div>
+
+<audio id="music-player" loop src="media/Jingle Punks - Pedro Versus the World [YzokkTSAKPc].mp3"></audio>
+
+<script>
+/* LÓGICA MATRIX */
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const drops = Array(Math.floor(canvas.width/15)).fill(1);
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#00ff9c"; ctx.font = "15px monospace";
+    drops.forEach((y, i) => {
+        ctx.fillText(String.fromCharCode(Math.random()*128), i*15, y*15);
+        if(y*15 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    });
+}
+setInterval(drawMatrix, 50);
+
+/* SISTEMA DE MISIONES */
+let missions = {
+    temp: [
+        { id: 1, txt: "Descifra 2 palabras", goal: 2, current: 0, done: false, diff: 'easy' },
+        { id: 2, txt: "Usa 1 Bomba", goal: 1, current: 0, done: false, diff: 'easy' },
+        { id: 3, txt: "Llega al Nodo 5", goal: 5, current: 0, done: false, diff: 'hard' }
+    ],
+    week: [
+        { id: 4, txt: "Gana 500$", goal: 500, current: 0, done: false, diff: 'hard' },
+        { id: 5, txt: "Modo Historia Comp.", goal: 1, current: 0, done: false, diff: 'hard' },
+        { id: 6, txt: "Completa 10 Nodos", goal: 10, current: 0, done: false, diff: 'easy' },
+        { id: 7, txt: "Mira 2 Anuncios", goal: 2, current: 0, done: false, diff: 'easy' },
+        { id: 8, txt: "Ahorra 1000$", goal: 1000, current: 0, done: false, diff: 'hard' },
+        { id: 9, txt: "Usa 5 Bombas", goal: 5, current: 0, done: false, diff: 'easy' },
+        { id: 10, txt: "Sobrevive 2 min", goal: 120, current: 0, done: false, diff: 'hard' },
+        { id: 11, txt: "Descifra 20 Palabras", goal: 20, current: 0, done: false, diff: 'hard' },
+        { id: 12, txt: "No falles en Nivel 1", goal: 1, current: 0, done: false, diff: 'easy' },
+        { id: 13, txt: "Juega modo infinito", goal: 1, current: 0, done: false, diff: 'easy' }
+    ],
+    nextTemp: Date.now(),
+    nextWeek: Date.now() + 604800000
+};
+
+function updateMissionsUI() {
+    const now = Date.now();
+    // Temporales
+    if (now > missions.nextTemp) {
+        missions.temp.forEach(m => { m.done = false; m.current = 0; });
+        missions.nextTemp = now + 3600000; // 1 hora
+    }
+    renderMissionList('list-temp', missions.temp, 'timer-temp', missions.nextTemp);
+    renderMissionList('list-week', missions.week, 'timer-week', missions.nextWeek);
+}
+
+function renderMissionList(elemId, list, timerId, nextTime) {
+    const div = document.getElementById(elemId);
+    div.innerHTML = "";
+    list.forEach(m => {
+        const item = document.createElement('div');
+        item.className = "mission-item" + (m.done ? " mission-done" : "");
+        item.innerHTML = `<span>${m.txt} (${m.diff === 'easy' ? '25$' : '75$'})</span> ${m.done ? '<span class="check">✔</span>' : ''}`;
+        div.appendChild(item);
+    });
+    const remaining = Math.max(0, Math.floor((nextTime - Date.now()) / 1000));
+    const h = Math.floor(remaining/3600);
+    const m = Math.floor((remaining%3600)/60);
+    const s = remaining%60;
+    document.getElementById(timerId).innerText = `RESET EN: ${h}h ${m}m ${s}s`;
+}
+
+function trackMission(type, amount = 1) {
+    [...missions.temp, ...missions.week].forEach(m => {
+        if (!m.done && m.txt.toLowerCase().includes(type.toLowerCase())) {
+            m.current += amount;
+            if (m.current >= m.goal) {
+                m.done = true;
+                money += (m.diff === 'easy' ? 25 : 75);
+                writeLog(`Misión cumplida: +${m.diff === 'easy' ? 25 : 75}$`);
+                updateUI();
+            }
+        }
+    });
+}
+
+/* LÓGICA CORE */
+let money = 200, scripts = 1, hp = 100, level = 1, bombsUsed = 0;
+let solution = "", currentShift = 0, timerVal = 60, gameInterval = null, selectedMode = "";
+const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+
+function changeScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id !== 'screen-game') { stopMusic(); clearInterval(gameInterval); }
+}
+
+function updateUI() {
+    document.getElementById('m-money').innerText = money;
+    document.getElementById('m-scripts').innerText = scripts;
+    document.getElementById('g-scripts').innerText = scripts;
+    document.getElementById('g-hp').innerText = hp;
+    document.getElementById('g-level').innerText = level;
+    updateMissionsUI();
+}
+
+function startGame(mode) {
+    selectedMode = mode; hp = 100; level = 1; bombsUsed = 0;
+    changeScreen('screen-game');
+    if(mode === 'time') {
+        timerVal = 60; document.getElementById('timer-box').style.display='block';
+        document.getElementById('music-player').play();
+        gameInterval = setInterval(()=> {
+            timerVal--; document.getElementById('g-timer').innerText = timerVal;
+            if(timerVal <=0) finishGame("TIEMPO AGOTADO");
+        }, 1000);
+    }
+    nextLevel();
+}
+
+function nextLevel() {
+    bombsUsed = 0;
+    const words = ["HACKER", "INN0VEX", "SISTEMA", "CODIGO", "VIRUS", "SATELITE", "RED", "NODO"];
+    solution = words[Math.floor(Math.random()*words.length)];
+    currentShift = Math.floor(Math.random()*10) + 1;
+    
+    let encrypted = "";
+    for(let l of solution) {
+        let i = alphabet.indexOf(l);
+        encrypted += (i===-1) ? l : alphabet[(i+currentShift)%alphabet.length];
+    }
+    document.getElementById('display-word').innerText = encrypted;
+    document.getElementById('user-input').value = "";
+    
+    const box = document.getElementById('conversion-box');
+    box.innerHTML = "";
+    for(let i=0; i<alphabet.length; i++) {
+        box.innerHTML += `<div class="conversion-item">${alphabet[(i+currentShift)%alphabet.length]}➔${alphabet[i]}</div>`;
+    }
+}
+
+function executeAttack() {
+    if(document.getElementById('user-input').value.toUpperCase().trim() === solution) {
+        money += 50; level++;
+        trackMission("descifra");
+        trackMission("nodos");
+        nextLevel();
+        updateUI();
+    } else {
+        hp -= 25; if(hp <= 0) finishGame("CORDURA AGOTADA");
+        updateUI();
+    }
+}
+
+function useBomb() {
+    if(scripts > 0) {
+        scripts--;
+        let letra = solution[bombsUsed] || solution[solution.length-1];
+        alert(`BOMBA: Letra en posición ${bombsUsed+1} es ${letra}`);
+        bombsUsed++;
+        trackMission("bomba");
+        updateUI();
+    }
+}
+
+/* RANKING Y PERFIL */
+function setAgentName() {
+    const n = document.getElementById('new-agent-name').value || "AGENTE_NULL";
+    document.getElementById('agent-tag').innerText = "ID: " + n;
+    localStorage.setItem('agentName', n);
+    closeModal('name-modal');
+}
+
+function showRanking() {
+    let r = JSON.parse(localStorage.getItem('cryptoRanking') || "[]");
+    document.getElementById('ranking-list').innerHTML = r.map(x => `[${x.mode}] ${x.name}: ${x.score}pts`).join('<br>');
+    openModal('ranking-modal');
+}
+
+function clearRanking() { if(confirm("¿Borrar historial?")) { localStorage.removeItem('cryptoRanking'); showRanking(); } }
+
+function finishGame(reason) {
+    clearInterval(gameInterval);
+    document.getElementById('final-score').innerText = (level * 100) + money;
+    openModal('save-modal');
+}
+
+function saveScore(save) {
+    if(save) {
+        let r = JSON.parse(localStorage.getItem('cryptoRanking') || "[]");
+        r.push({ name: localStorage.getItem('agentName') || "ANON", score: (level*100)+money, mode: selectedMode });
+        localStorage.setItem('cryptoRanking', JSON.stringify(r.sort((a,b)=>b.score-a.score).slice(0,10)));
+    }
+    closeModal('save-modal');
+    changeScreen('screen-menu');
+}
+
+/* OTROS */
+function profEncrypt() {
+    let t = document.getElementById('prof-input').value.toUpperCase();
+    let s = parseInt(document.getElementById('prof-shift').value);
+    let res = "";
+    for(let l of t) { let i = alphabet.indexOf(l); res += (i===-1)?l:alphabet[(i+s)%alphabet.length]; }
+    document.getElementById('prof-result').innerText = res;
+}
+
+function playAd() {
+    openModal('ad-box');
+    const v = document.getElementById('video-player');
+    v.play();
+    v.onended = () => { closeModal('ad-box'); scripts++; trackMission("anuncios"); updateUI(); };
+}
+
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function writeLog(m) { const l = document.getElementById('system-log'); l.innerHTML = `[${new Date().toLocaleTimeString()}] ${m}<br>` + l.innerHTML; }
+function showRandomTip() { document.getElementById('tip-display').innerText = "> " + ["Usa 2FA", "Cuidado con el Phishing", "Actualiza tu Software", "No uses redes públicas", "Contraseñas largas son mejores"][Math.floor(Math.random()*5)]; }
+function confirmAbort() { if(confirm("¿Abortar misión?")) finishGame("ABORTO"); }
+function stopMusic() { const m = document.getElementById('music-player'); m.pause(); m.currentTime = 0; }
+
+// Loop de misiones cada segundo
+setInterval(updateMissionsUI, 1000);
+updateUI();
+// Cargar nombre si existe
+if(localStorage.getItem('agentName')) document.getElementById('agent-tag').innerText = "ID: " + localStorage.getItem('agentName');
+</script>
+</body>
+</html>
