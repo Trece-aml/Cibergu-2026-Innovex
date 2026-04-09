@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Criptme - Innovex Professional Edition</title>
+    <style>
+        :root { 
+            --neon: #00ff9c; --bg: #000; --red: #ff4444; 
+            --gold: #ffcc00; --blue: #00d4ff; --glass: rgba(0, 255, 156, 0.1);
+        }
+
+        body { 
+            margin:0; font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: var(--bg); color: var(--neon); text-align: center; overflow: hidden; 
+        }
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        /* Animaciones */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+
+        .screen { 
+            display: none; padding: 20px; height: 100vh; box-sizing: border-box; 
+            flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .active { display: flex; animation: fadeIn 0.5s ease-out; }
+
+        .panel { 
+            border: 1px solid var(--neon); padding: 15px; background: rgba(0,0,0,0.9); 
+            margin-bottom: 10px; box-shadow: inset 0 0 15px rgba(0, 255, 156, 0.2);
+            backdrop-filter: blur(5px); animation: slideIn 0.4s ease-out;
+        }
+
+        .grid { display: flex; gap: 15px; justify-content: center; align-items: flex-start; max-width: 1400px; }
+        
+        button { 
+            background: transparent; border: 1px solid var(--neon); color: var(--neon); 
+            padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold;
+            transition: 0.3s; margin: 5px;
+        }
+        button:hover { background: var(--neon); color: black; box-shadow: 0 0 15px var(--neon); }
+
+        input, select { 
+            background: #000; border: 1px solid var(--neon); color: var(--neon); 
+            padding: 10px; text-align: center; font-size: 18px; outline: none;
+        }
+
+        .aciertos-box { 
+            border: 2px solid var(--gold); color: var(--gold); padding: 10px 40px; 
+            font-size: 22px; margin-bottom: 15px; font-weight: bold; 
+        }
+
+        .mission-item { 
+            font-size: 0.8rem; text-align: left; border-bottom: 1px solid #111; 
+            padding: 5px; display: flex; justify-content: space-between; 
+        }
+        .mission-done { color: var(--blue); text-decoration: line-through; }
+
+        .conversion-table { font-size: 11px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+
+        .back-btn { position: absolute; top: 20px; left: 20px; cursor: pointer; background:none; border:none; }
+        .back-btn img { width: 45px; filter: drop-shadow(0 0 5px var(--neon)); }
+
+        .modal { 
+            display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); 
+            background:black; border:2px solid var(--neon); padding:30px; z-index:1000; 
+            box-shadow: 0 0 50px #000; min-width: 300px;
+        }
+
+        #credits-innovex { position: fixed; bottom: 10px; right: 20px; font-size: 16px; font-weight: bold; }
+    </style>
+</head>
+<body onclick="initAudio()"> <canvas id="matrix"></canvas>
+
+<audio id="audio-menu" loop src="media/menu.mp3"></audio>
+<audio id="audio-game" loop src="media/Jingle Punks - Pedro Versus the World [YzokkTSAKPc].mp3"></audio>
+<audio id="audio-boton" src="media/boton.mp3"></audio>
+
+<div id="screen-intro" class="screen active">
+    <h1 style="font-size: 5rem; letter-spacing: 20px; margin: 0; text-shadow: 0 0 20px var(--neon);">CRIPTME</h1>
+    <div class="panel" style="width: 600px;">
+        <p id="tip-display">> Sistema Innovex: Calibrando protocolos de seguridad...</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <button onclick="showRandomTip()">CIBER-TIP</button>
+        <button onclick="changeScreen('screen-menu')" style="font-size: 1.5rem;">INICIAR JUEGO</button>
+    </div>
+    <div id="credits-innovex">Hecho por Innovex</div>
+</div>
+
+<div id="screen-menu" class="screen">
+    <button class="back-btn" onclick="changeScreen('screen-intro')"><img src="media/atras.png" alt="Atrás"></button>
+    
+    <div class="grid">
+        <div class="panel" style="width: 300px;">
+            <h3 style="color:var(--gold); margin:0;">[MISIONES]</h3>
+            <div id="timer-temp" style="font-size:10px; color:var(--red);"></div>
+            <div id="list-temp"></div>
+            <hr style="border:0.5px solid #222">
+            <div id="timer-week" style="font-size:10px; color:var(--red);"></div>
+            <div id="list-week"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column;">
+            <div class="panel" style="width: 380px;">
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+                    <span>🔊</span>
+                    <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5" oninput="adjustVolume(this.value)">
+                    <button onclick="toggleMute()" id="mute-btn">SILENCIAR</button>
+                </div>
+            </div>
+            <div class="panel" style="width: 380px;">
+                <h3 style="margin:5px">> OPERACIONES</h3>
+                <a href="historia-demo.html" 
+   onclick="describeMode('historia')" 
+   style="display:inline-block; width:90%; text-align:center; background:transparent; border:1px solid var(--neon); color:var(--neon); padding:10px 20px; cursor:pointer; text-transform:uppercase; font-weight:bold; margin:5px; text-decoration:none;">
+    MODO HISTORIA
+</a>
+                <button onclick="describeMode('contrareloj')" style="width:90%; color:var(--red); border-color:var(--red);">MODO CONTRARRELOJ</button>
+                <button onclick="describeMode('infinito')" style="width:90%">MODO INFINITO</button>
+            </div>
+            <div class="panel">
+                <h4 style="margin:0">LOG DEL SISTEMA</h4>
+                <div id="system-log" style="font-size:10px; height:60px; overflow:hidden; text-align:left; color:#008855;"></div>
+            </div>
+        </div>
+
+        <div class="panel" style="width: 300px;">
+            <h3 style="margin:0">> AGENTE</h3>
+            <p id="agent-tag" style="color:var(--blue);">ID: AGENTE_NULL</p>
+            <button onclick="openModal('name-modal')" style="font-size:10px;">EDITAR IDENTIDAD</button>
+            <button onclick="showRanking()" style="font-size:10px;">RANKING GLOBAL</button>
+            <button onclick="clearRanking()" style="font-size:10px; color:var(--red);">BORRAR DATOS</button>
+            <hr>
+            <button onclick="changeScreen('screen-profesor')" style="width:90%">MODO PROFESOR</button>
+            <button onclick="playAd()" style="width:90%; color:var(--gold); border-color:var(--gold);">VER ANUNCIO (+1 BOMBA)</button>
+        </div>
+    </div>
+    <div class="panel" style="width: 400px; border-color: var(--blue);">
+        <p style="margin:0;">CREDITOS: $<span id="m-money">200</span> | BOMBAS: <span id="m-scripts">0</span></p>
+    </div>
+</div>
+
+<div id="screen-game" class="screen">
+    <div id="aciertos-hub" class="aciertos-box">RACHA DE ACIERTOS: <span id="g-aciertos">0</span></div>
+    
+    <div class="grid">
+        <div class="panel" style="width: 200px;">
+            <p style="color:var(--red)">CORDURA: <span id="g-hp">100</span>%</p>
+            <p>Nº PALABRA: <span id="g-level">1</span></p>
+            <p id="timer-box" style="display:none; color:var(--gold); font-size:25px;">⏱ <span id="g-timer">0</span></p>
+            <p>BOMBAS: <span id="g-scripts">0</span></p>
+        </div>
+
+        <div class="panel" style="width: 500px;">
+            <p id="story-fact" style="font-size:11px; color:var(--blue); min-height:30px;"></p>
+            <h2 id="display-word" style="letter-spacing:12px; font-size:42px;">------</h2>
+            <input type="text" id="user-input" autocomplete="off" style="width:90%">
+            <button onclick="executeAttack()" style="width:100%; height:50px; margin-top:15px;">EJECUTAR DECODIFICACIÓN</button>
+            <button onclick="useBomb()" style="width:100%; border-color:var(--gold); color:var(--gold);">LANZAR BOMBA</button>
+        </div>
+
+        <div class="panel" style="width: 280px;">
+            <h3 id="table-title">TABLA INTEL</h3>
+            <div id="conversion-box" class="conversion-table"></div>
+        </div>
+    </div>
+    <button onclick="confirmAbort()">ABORTAR MISIÓN</button>
+</div>
+
+<div id="screen-profesor" class="screen">
+    <button class="back-btn" onclick="changeScreen('screen-menu')"><img src="media/atras.png" alt="Atrás"></button>
+    <div class="grid">
+        <div class="panel" style="width: 450px;">
+            <h2 style="margin:0">MODO PROFESOR</h2>
+            <p style="color:var(--blue)">DICCIONARIO DE CIFRADO</p>
+            <hr>
+            <div style="text-align:left; margin-bottom:10px;">
+                <label>TEXTO A PROCESAR:</label><br>
+                <input type="text" id="prof-input" style="width:95%" oninput="profProcess()">
+            </div>
+            <div style="text-align:left;">
+                <label>DESPLAZAMIENTO (SHIFT):</label><br>
+                <input type="number" id="prof-shift" value="3" min="1" max="26" style="width:50px" oninput="profProcess()">
+            </div>
+            <div class="panel" style="margin-top:20px; border-style:dashed;">
+                <p>RESULTADO:</p>
+                <h3 id="prof-result" style="color:var(--gold); font-size:24px; word-break:break-all;">---</h3>
+            </div>
+        </div>
+        <div class="panel" style="width: 400px;">
+            <h3>DICCIONARIO DINÁMICO</h3>
+            <div id="prof-conversion-box" class="conversion-table" style="grid-template-columns: repeat(4, 1fr);"></div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-msg" class="modal">
+    <h3 id="modal-title">MENSAJE DEL SISTEMA</h3>
+    <p id="modal-body"></p>
+    <button onclick="closeModal('modal-msg')">ENTENDIDO</button>
+</div>
+
+<div id="diff-modal" class="modal">
+    <h3 id="mode-title-modal">MODO</h3>
+    <p id="mode-desc-modal" style="font-size:12px; color:var(--blue);"></p>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+        <button onclick="startGame('facil')">FÁCIL (César - 75s - 25pts)</button>
+        <button onclick="startGame('normal')">NORMAL (Atbash - 45s - 50pts)</button>
+        <button onclick="startGame('hardcore')">HARDCORE (César/Atbash - 25s - 100pts)</button>
+    </div>
+    <button onclick="closeModal('diff-modal')" style="border:none; color:grey;">VOLVER</button>
+</div>
+
+<div id="name-modal" class="modal">
+    <h3>IDENTIFICACIÓN</h3>
+    <input type="text" id="new-agent-name" placeholder="ID del Agente...">
+    <button onclick="setAgentName()">GUARDAR</button>
+</div>
+
+<div id="save-modal" class="modal">
+    <h3>RESULTADO</h3>
+    <p>CRÉDITOS: <span id="final-score">0</span></p>
+    <button onclick="saveScore(true)">GUARDAR</button>
+    <button onclick="saveScore(false)" style="color:var(--red)">DESCARTAR</button>
+</div>
+
+<div id="ad-box" class="modal">
+    <h3 style="color:var(--gold)">PUBLICIDAD DE SOCIO...</h3>
+    <video id="video-player" width="400" src="media/lobato.mp4"></video>
+</div>
+
+<script>
+/* MATRIX */
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const drops = Array(Math.floor(canvas.width/15)).fill(1);
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#00ff9c"; ctx.font = "15px monospace";
+    drops.forEach((y, i) => {
+        ctx.fillText(String.fromCharCode(Math.random()*128), i*15, y*15);
+        if(y*15 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    });
+}
+setInterval(drawMatrix, 50);
+
+/* VARIABLES */
+let money = 200, scripts = 1, hp = 100, level = 1, aciertos = 0;
+let solution = "", currentShift = 0, timerVal = 0, gameInterval = null;
+let selectedMode = "", currentDiff = "", currentCipher = "cesar";
+let cheatUsed = false;
+const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+
+/* AUDIO LOGIC */
+function initAudio() {
+    if(document.getElementById('audio-menu').paused && document.querySelector('.active').id === 'screen-intro') {
+        document.getElementById('audio-menu').play();
+    }
+}
+
+// Sonido en cada botón
+document.addEventListener('click', function(e) {
+    if(e.target.tagName === 'BUTTON') {
+        const sfx = document.getElementById('audio-boton');
+        sfx.currentTime = 0;
+        sfx.play();
+    }
+});
+
+function adjustVolume(v) {
+    const audios = ['audio-menu', 'audio-game', 'audio-boton', 'video-player'];
+    audios.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.volume = v;
+    });
+}
+
+function toggleMute() {
+    const m = document.getElementById('audio-menu');
+    const btn = document.getElementById('mute-btn');
+    if(m.volume > 0) { adjustVolume(0); btn.innerText = "RESTAURAR"; }
+    else { adjustVolume(0.5); btn.innerText = "SILENCIAR"; }
+}
+
+/* NAVEGACIÓN */
+function changeScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    
+    const menuAudio = document.getElementById('audio-menu');
+    const gameAudio = document.getElementById('audio-game');
+
+    if(id === 'screen-intro' || id === 'screen-menu' || id === 'screen-profesor') {
+        if(menuAudio.paused) menuAudio.play();
+        gameAudio.pause();
+    } else if (id === 'screen-game') {
+        menuAudio.pause();
+    }
+}
+
+/* JUEGO */
+function describeMode(mode) {
+    selectedMode = mode;
+    document.getElementById('mode-title-modal').innerText = mode.toUpperCase();
+    document.getElementById('mode-desc-modal').innerText = "Selecciona dificultad para " + mode;
+    openModal('diff-modal');
+}
+
+function startGame(diff) {
+    currentDiff = diff; hp = 100; level = 1; aciertos = 0;
+    closeModal('diff-modal');
+    changeScreen('screen-game');
+    
+    if(selectedMode === 'time') {
+        timerVal = (diff==='facil'?75:(diff==='normal'?45:25));
+        document.getElementById('timer-box').style.display = 'block';
+        document.getElementById('audio-game').play();
+        gameInterval = setInterval(() => {
+            timerVal--; document.getElementById('g-timer').innerText = timerVal;
+            if(timerVal <= 0) finishGame("TIEMPO AGOTADO");
+        }, 1000);
+    } else {
+        document.getElementById('timer-box').style.display = 'none';
+    }
+    nextLevel();
+}
+
+function nextLevel() {
+    const pool = ["CRIPTME", "INNOVEX", "HACKER", "CODIGO", "SISTEMA", "FIREWALL", "SERVER"];
+    solution = pool[Math.floor(Math.random()*pool.length)];
+    currentShift = Math.floor(Math.random()*5) + 1;
+    
+    if(currentDiff === 'facil') currentCipher = "cesar";
+    else if(currentDiff === 'normal') currentCipher = "atbash";
+    else currentCipher = Math.random() > 0.5 ? "cesar" : "atbash";
+    
+    let disp = "";
+    if(currentCipher === 'cesar') {
+        for(let l of solution) { let i=alphabet.indexOf(l); disp += (i===-1)?l:alphabet[(i+currentShift)%alphabet.length]; }
+    } else {
+        disp = solution.split('').map(c => { let i=alphabet.indexOf(c); return i===-1?c:alphabet[alphabet.length-1-i]; }).join('');
+    }
+    
+    document.getElementById('display-word').innerText = disp;
+    document.getElementById('user-input').value = "";
+    document.getElementById('g-aciertos').innerText = aciertos;
+    updateTable();
+}
+
+function updateTable() {
+    const box = document.getElementById('conversion-box');
+    box.innerHTML = "";
+    if(currentDiff === 'facil') {
+        document.getElementById('table-title').innerText = "ABECEDARIO GUÍA";
+        alphabet.split('').forEach(l => box.innerHTML += `<div class="conversion-item">${l}</div>`);
+    } else {
+        document.getElementById('table-title').innerText = "INTEL (" + currentCipher.toUpperCase() + ")";
+        if(currentCipher === 'cesar') {
+            for(let i=0; i<alphabet.length; i++) box.innerHTML += `<div class="conversion-item">${alphabet[(i+currentShift)%alphabet.length]}➔${alphabet[i]}</div>`;
+        } else {
+            for(let i=0; i<alphabet.length; i++) box.innerHTML += `<div class="conversion-item">${alphabet[i]}➔${alphabet[alphabet.length-1-i]}</div>`;
+        }
+    }
+    updateUI();
+}
+
+function executeAttack() {
+    if(document.getElementById('user-input').value.toUpperCase().trim() === solution) {
+        let p = (currentDiff==='facil'?25:(currentDiff==='normal'?50:100));
+        money += p; aciertos++; level++;
+        nextLevel();
+    } else {
+        hp -= 25; if(hp <= 0) finishGame("CONEXIÓN CORTADA");
+        updateUI();
+    }
+}
+
+/* MODO PROFESOR (LÓGICA) */
+function profProcess() {
+    const txt = document.getElementById('prof-input').value.toUpperCase();
+    const shift = parseInt(document.getElementById('prof-shift').value) || 0;
+    let res = "";
+    for(let l of txt) {
+        let i = alphabet.indexOf(l);
+        res += (i === -1) ? l : alphabet[(i + shift) % alphabet.length];
+    }
+    document.getElementById('prof-result').innerText = res || "---";
+    
+    const box = document.getElementById('prof-conversion-box');
+    box.innerHTML = "";
+    for(let i=0; i<alphabet.length; i++) {
+        box.innerHTML += `<div class="conversion-item">${alphabet[i]}➔${alphabet[(i+shift)%alphabet.length]}</div>`;
+    }
+}
+
+/* EASTER EGG (KONAMI) */
+let keys = [];
+window.onkeydown = (e) => {
+    keys.push(e.key); keys = keys.slice(-10);
+    const code = "ArrowUpArrowUpArrowDownArrowDownArrowLeftArrowRightArrowLeftArrowRightEnter";
+    if(keys.join('').includes(code)) {
+        if(!cheatUsed) {
+            scripts += 5; cheatUsed = true;
+            showSystemModal("Easter Egg Activado", "¡Felicidades! Has conseguido 5 bombas lógicas.");
+            updateUI();
+        } else {
+            showSystemModal("Aviso", "Tampoco te pases de listo...");
+        }
+        keys = [];
+    }
+};
+
+function showSystemModal(title, body) {
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-body').innerText = body;
+    openModal('modal-msg');
+}
+
+/* MISC */
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function updateUI() {
+    document.getElementById('m-money').innerText = money;
+    document.getElementById('m-scripts').innerText = scripts;
+    document.getElementById('g-scripts').innerText = scripts;
+    document.getElementById('g-hp').innerText = hp;
+    document.getElementById('g-level').innerText = level;
+}
+function finishGame(r) {
+    clearInterval(gameInterval);
+    document.getElementById('audio-game').pause();
+    if(aciertos === 0) { alert("SISTEMA: Misión fallida. 0 aciertos."); changeScreen('screen-menu'); return; }
+    document.getElementById('final-score').innerText = money;
+    openModal('save-modal');
+}
+function saveScore(s) {
+    if(s) {
+        let r = JSON.parse(localStorage.getItem('criptmeRank') || "[]");
+        r.push({ name: localStorage.getItem('agentName')||"ANON", score: money, mode: selectedMode });
+        localStorage.setItem('criptmeRank', JSON.stringify(r.sort((a,b)=>b.score-a.score).slice(0,5)));
+    }
+    closeModal('save-modal'); changeScreen('screen-menu');
+}
+function useBomb() { if(scripts > 0) { scripts--; alert("PISTA: La palabra es " + solution); updateUI(); } }
+function playAd() { 
+    openModal('ad-box'); 
+    const v = document.getElementById('video-player');
+    v.play(); 
+    v.onended = () => { closeModal('ad-box'); scripts++; updateUI(); }; 
+}
+function setAgentName() {
+    let n = document.getElementById('new-agent-name').value || "AGENTE_X";
+    localStorage.setItem('agentName', n); document.getElementById('agent-tag').innerText = "ID: " + n;
+    closeModal('name-modal');
+}
+function showRandomTip() { document.getElementById('tip-display').innerText = "> TIP: " + ["Cifra tus correos", "Innovex: Siempre seguros", "Usa contraseñas largas", "No compartas tu ID"][Math.floor(Math.random()*4)]; }
+function confirmAbort() { if(confirm("¿Abortar? Perderás el progreso de esta sesión.")) finishGame("ABORT"); }
+
+if(localStorage.getItem('agentName')) document.getElementById('agent-tag').innerText = "ID: " + localStorage.getItem('agentName');
+updateUI();
+profProcess();
+/* SISTEMA DE MISIONES */
+let missions = {
+    temp: [
+        { id: 1, txt: "Descifra 2 palabras", goal: 2, current: 0, done: false, diff: 'easy' },
+        { id: 2, txt: "Usa 1 Bomba", goal: 1, current: 0, done: false, diff: 'easy' },
+        { id: 3, txt: "Llega al Nodo 5", goal: 5, current: 0, done: false, diff: 'hard' }
+    ],
+    week: [
+        { id: 4, txt: "Gana 500$", goal: 500, current: 0, done: false, diff: 'hard' },
+        { id: 5, txt: "Modo Historia Comp.", goal: 1, current: 0, done: false, diff: 'hard' },
+        { id: 6, txt: "Completa 10 Nodos", goal: 10, current: 0, done: false, diff: 'easy' },
+        { id: 7, txt: "Mira 2 Anuncios", goal: 2, current: 0, done: false, diff: 'easy' },
+        { id: 8, txt: "Ahorra 1000$", goal: 1000, current: 0, done: false, diff: 'hard' },
+        { id: 9, txt: "Usa 5 Bombas", goal: 5, current: 0, done: false, diff: 'easy' },
+        { id: 10, txt: "Sobrevive 2 min", goal: 120, current: 0, done: false, diff: 'hard' },
+        { id: 11, txt: "Descifra 20 Palabras", goal: 20, current: 0, done: false, diff: 'hard' },
+        { id: 12, txt: "No falles en Nivel 1", goal: 1, current: 0, done: false, diff: 'easy' },
+        { id: 13, txt: "Juega modo infinito", goal: 1, current: 0, done: false, diff: 'easy' }
+    ],
+    nextTemp: Date.now(),
+    nextWeek: Date.now() + 604800000
+};
+
+function updateMissionsUI() {
+    const now = Date.now();
+    // Temporales
+    if (now > missions.nextTemp) {
+        missions.temp.forEach(m => { m.done = false; m.current = 0; });
+        missions.nextTemp = now + 3600000; // 1 hora
+    }
+    renderMissionList('list-temp', missions.temp, 'timer-temp', missions.nextTemp);
+    renderMissionList('list-week', missions.week, 'timer-week', missions.nextWeek);
+}
+
+function renderMissionList(elemId, list, timerId, nextTime) {
+    const div = document.getElementById(elemId);
+    div.innerHTML = "";
+    list.forEach(m => {
+        const item = document.createElement('div');
+        item.className = "mission-item" + (m.done ? " mission-done" : "");
+        item.innerHTML = `<span>${m.txt} (${m.diff === 'easy' ? '25$' : '75$'})</span> ${m.done ? '<span class="check">✔</span>' : ''}`;
+        div.appendChild(item);
+    });
+    const remaining = Math.max(0, Math.floor((nextTime - Date.now()) / 1000));
+    const h = Math.floor(remaining/3600);
+    const m = Math.floor((remaining%3600)/60);
+    const s = remaining%60;
+    document.getElementById(timerId).innerText = `RESET EN: ${h}h ${m}m ${s}s`;
+}
+
+function trackMission(type, amount = 1) {
+    [...missions.temp, ...missions.week].forEach(m => {
+        if (!m.done && m.txt.toLowerCase().includes(type.toLowerCase())) {
+            m.current += amount;
+            if (m.current >= m.goal) {
+                m.done = true;
+                money += (m.diff === 'easy' ? 25 : 75);
+                writeLog(`Misión cumplida: +${m.diff === 'easy' ? 25 : 75}$`);
+                updateUI();
+            }
+        }
+    });
+}
+
+function writeLog(m) { const l = document.getElementById('system-log'); l.innerHTML = `[${new Date().toLocaleTimeString()}] ${m}<br>` + l.innerHTML; }
+setInterval(updateMissionsUI, 1000);
+
+updateUI();
+</script>
+</body>
+</html>
